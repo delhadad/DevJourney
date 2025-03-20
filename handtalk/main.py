@@ -106,3 +106,33 @@ def extract_keypoints(results):
     face = np.array([[res.x, res.y, res.z] for res in results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468*3)
     lh = np.array([[res.x, res.y, res.z] for res in results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21*3)
     rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(21*3)
+    return np.concatenate([pose,face,lh,rh])
+
+# path for exported data, numpy arrays
+DATA_PATH = os.path.join('MP_Data')
+
+#actions that we try to detect
+actions = np.array([chr(i) for i in range(65, 91)] + ['space', 'end'])
+
+print(actions)
+
+#thirty videos worth of data, Each action (gesture) will have 30 recorded videos
+no_sequences = 30
+
+#videos are going to be 30 frames in length, Each recorded video clip will contain 30 frames (images).
+sequwne_length = 30
+
+#A
+##0
+##1
+##2
+##...
+##29
+#B
+#C
+for action in actions:
+     for sequence in range(no_sequences):
+          try:
+              os.makedirs(os.path.join(DATA_PATH, action, str(sequence)))
+          except:
+               pass
