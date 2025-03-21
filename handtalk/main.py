@@ -120,7 +120,7 @@ print(actions)
 no_sequences = 30
 
 #videos are going to be 30 frames in length, Each recorded video clip will contain 30 frames (images).
-sequwne_length = 30
+sequence_length = 30
 
 #A
 ##0
@@ -136,3 +136,43 @@ for action in actions:
               os.makedirs(os.path.join(DATA_PATH, action, str(sequence)))
           except:
                pass
+          
+
+# * Start webcam and process video
+cap = cv2.VideoCapture(0)  
+
+# * Initialize MediaPipe model
+with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
+    for action in actions:
+        for sequence in range (no_sequences):
+             for frame_num in range(sequence_length):
+        
+        
+                    ret, frame = cap.read()
+        
+                    # * Process and detect landmarks
+                    image, results = mediapipe_detection(frame, holistic)
+                    print(results)  # Print detection output
+
+                    draw_styled_landmarks(image, results)  # Draw landmarks
+
+                    if frame_num == 0:
+                        cv2.putText(image, 'STARTING COLLECTION', (120,200),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 4, cv2.LINE_AA)
+                        cv2.putText(image, 'Collecting frames for {} Video Number {}'.format(action,sequence), (15,12),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 1, cv2.LINE_AA)
+                        cv2.waitKey(2000)
+                    else:
+                          cv2.putText(image, 'Collecting frames for {} Video Number {}'.format(action,sequence), (15,12),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 1, cv2.LINE_AA)
+                          cv2.imshow('OpenCV Feed', image) 
+                    keypoints = extract_keypoints(results)
+                    npy_path = os.path.join(DATA_PATH,action, str(sequence), str(frame_num))
+                    np.save(npy_path, keypoints)
+
+                    if cv2.waitKey(10) & 0xFF == ord('q'):
+                        break
+
+# * Release resources
+cap.release()
+cv2.destroyAllWindows()
