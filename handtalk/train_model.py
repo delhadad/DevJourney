@@ -1,15 +1,18 @@
 
-# * ==========================================
-# * 6. Preprocess Data and Create Labels
-# * ==========================================
 import os
 import numpy as np
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.callbacks import TensorBoard
 from config import (
     actions, no_sequences, sequence_length, DATA_PATH
 )
 
+# * ==========================================
+# * 6. Preprocess Data and Create Labels
+# * ==========================================
 
 # * Create a dictionary mapping each action to a label number like this: {'A': 0, 'B': 1, ..., 'space': 26, 'end': 27, 'delete': 28}
 label_map = {label:num for num, label in enumerate(actions)}
@@ -35,4 +38,24 @@ y = to_categorical(labels).astype(int)
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.05)
 
 
+# * ==================================================
 # * 7. Build and Train an LSTM Deep Learning Model
+# * ==================================================
+
+log_dir = os.path.join('Logs')  # Set up folder to store TensorBoard logs
+tb_callback = TensorBoard(log_dir=log_dir)  # Enables training visualization
+
+# * Define a Sequential LSTM-based model for gesture classification
+model = Sequential()
+model.add(LSTM(64, return_sequences=True, activation='relu', input_shape=(30, 1662))) 
+model.add(LSTM(128, return_sequences=True, activation='relu'))
+model.add(LSTM(64, return_sequences=False, activation='relu'))  
+model.add(Dense(64, activation='relu')) 
+model.add(Dense(32, activation='relu'))  
+model.add(Dense(actions.shape[0], activation='softmax'))  
+
+# * Compile model with categorical crossentropy loss and accuracy metric
+model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['categorical_accuracy'])
+
+# * Train the model with training data, and log training for TensorBoard
+model.fit(x_train, y_train, epochs=2000, callbacks=[tb_callback])
