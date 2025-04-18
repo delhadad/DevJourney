@@ -8,6 +8,8 @@ import os  # OS for file handling
 from matplotlib import pyplot as plt  # Matplotlib for visualization
 import time  # Time functions
 import mediapipe as mp  # MediaPipe for AI-based hand, face, and pose tracking
+from train_model import (model, x_test) # Import your trained model from train_model.py
+from config import actions
 
 # * Initialize MediaPipe models
 mp_holistic = mp.solutions.holistic  # Full-body tracking (pose, hands, face)
@@ -60,10 +62,17 @@ def extract_keypoints(results):
 
 
 
-# * ==========================================
-# * 6. Preprocess Data and Create Labels
-# * 7. Build and Train an LSTM Deep Learning Model
+## * ==========================================
 # * 8. Make Sign Language Predictions
+# * ==========================================
+
+# * Make predictions on the test set
+res = model.predict(x_test)  # Make predictions on the test set (X_test should be defined in the previous steps)
+predicted_action = actions[np.argmax(res[4])]  # Get the predicted action for the 5th test sample (for example)
+print(f"Predicted Action: {predicted_action}")
+
+
+# * ==========================================
 # * 9. Save Model Weights
 # * 10. Evaluation using a Confusion Matrix
 # * 11. Test in Real Time

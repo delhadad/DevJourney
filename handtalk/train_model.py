@@ -3,8 +3,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout
-from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.callbacks import TensorBoard
 from config import actions, no_sequences, sequence_length, DATA_PATH
 
 
@@ -15,7 +15,7 @@ from config import actions, no_sequences, sequence_length, DATA_PATH
 label_map = {label:num for num, label in enumerate(actions)}
 
 sequences, labels = [], []
-# * Loop through each action (A-Z, space, end, delete), sequence (e.g., 30 sequences per letter), and frame (30 per sequence) to load data
+# * Loop through each action, sequence, and frame (30 per sequence) to load data
 # * which holds landmark keypoints,Builds a window (a list of 30 frames),And adds it to the final sequences list.
 
 for action in actions:
@@ -53,3 +53,8 @@ model.add(Dense(actions.shape[0], activation='softmax'))
 
 model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['categorical_accuracy'])
 model.fit(x_train, y_train, epochs=2000, callbacks=[tb_callback])
+
+
+model.save('action.h5') # Save the entire model (including architecture and weights) to a file named 'action.h5'
+del model # Delete the current model from memory
+model.load_weights('action.h5') # Load the model weights from the 'action.h5' file
