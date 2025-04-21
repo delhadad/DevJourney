@@ -56,5 +56,4 @@ model.fit(x_train, y_train, epochs=2000, callbacks=[tb_callback])
 
 
 model.save('action.h5') # Save the entire model (including architecture and weights) to a file named 'action.h5'
-del model # Delete the current model from memory
 model.load_weights('action.h5') # Load the model weights from the 'action.h5' file
