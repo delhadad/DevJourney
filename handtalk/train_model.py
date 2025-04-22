@@ -54,6 +54,8 @@ model.add(Dense(actions.shape[0], activation='softmax'))
 model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['categorical_accuracy'])
 model.fit(x_train, y_train, epochs=2000, callbacks=[tb_callback])
 
-
+# * ===============================================
+# * 9. Save Model Weights
+# * ===============================================
 model.save('action.h5') # Save the entire model (including architecture and weights) to a file named 'action.h5'
 model.load_weights('action.h5') # Load the model weights from the 'action.h5' file
