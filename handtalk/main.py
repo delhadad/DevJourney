@@ -73,16 +73,16 @@ print(f"Predicted Action: {predicted_action}")
 
 
 # * ==========================================
-# * 9. Save Model Weights
-# * 10. Evaluation using a Confusion Matrix
 # * 11. Test in Real Time
-# * (Coming soon in separate training and inference scripts)
-
-
+# * ==========================================
 cap = cv2.VideoCapture(0)  
 
 # * Initialize MediaPipe model
 with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
+    sequence = []
+    sentence = []
+    threshold = 0.4
+
     while cap.isOpened():
         ret, frame = cap.read()
         
@@ -96,9 +96,24 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
 
         draw_styled_landmarks(image, results)  # Draw landmarks
 
-        cv2.imshow('OpenCV Feed', image)  # Show processed video
-        
-        # * Exit on 'q' key press
+        # * 2. Prediction Logic
+        keypoints = extract_keypoints(results)
+        sequence.append(keypoints)
+        sequence = sequence[:30]
+
+        if len(sequence) == 30:
+            res = model.predict(np.expand_dims(sequence, axis=0))[0]
+            print(actions[np.argmax(res)])
+            # If prediction confidence is above the threshold, print prediction
+            if res[np.argmax(res)] > threshold:
+                predicted_action = actions[np.argmax(res)]
+                print(f"Predicted Action: {predicted_action}")
+                sentence.append(predicted_action)
+
+        # * Show to screen
+        cv2.imshow('OpenCV Feed', image)
+
+        # Break gracefully on 'q' key press
         if cv2.waitKey(10) & 0xFF == ord('q'):
             break
 
