@@ -96,19 +96,31 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
 
         draw_styled_landmarks(image, results)  # Draw landmarks
 
-        # * 2. Prediction Logic
+          # * 2. Prediction Logic
         keypoints = extract_keypoints(results)
-        sequence.append(keypoints)
+        sequence.insert(0, keypoints)
         sequence = sequence[:30]
 
         if len(sequence) == 30:
-            res = model.predict(np.expand_dims(sequence, axis=0))[0]
-            print(actions[np.argmax(res)])
-            # If prediction confidence is above the threshold, print prediction
-            if res[np.argmax(res)] > threshold:
-                predicted_action = actions[np.argmax(res)]
-                print(f"Predicted Action: {predicted_action}")
-                sentence.append(predicted_action)
+           res = model.predict(np.expand_dims(sequence, axis=0))[0]  # Predict the action
+           print(actions[np.argmax(res)])
+
+        # * 3. Visualization logic
+        if res[np.argmax(res)] > threshold:
+            if len(sentence) > 0:
+                # Append to sentence only if it's not the same as the previous action
+                if actions[np.argmax(res)] != sentence[-1]:
+                    sentence.append(actions[np.argmax(res)])
+            else:
+                sentence.append(actions[np.argmax(res)])
+
+        # Limit the sentence to the last 5 actions for readability
+        if len(sentence) > 5:
+            sentence = sentence[-5:]
+
+        # Draw a rectangle to display the predicted actions
+        cv2.rectangle(image, (0, 0), (640, 40), (173, 216, 230), -1)  # Light blue rectangle 
+        cv2.putText(image, ' '.join(sentence), (3, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
         # * Show to screen
         cv2.imshow('OpenCV Feed', image)
