@@ -75,66 +75,55 @@ print(f"Predicted Action: {predicted_action}")
 # * ==========================================
 # * 11. Test in Real Time
 # * ==========================================
-cap = cv2.VideoCapture(0)  
+cap = cv2.VideoCapture(0)
 
-# * Initialize MediaPipe model
 with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
     sequence = []
     sentence = []
-    threshold = 0.4
+    threshold = 0.7
 
     while cap.isOpened():
         ret, frame = cap.read()
-        
         if not ret:
-            print("Failed to grab frame")  # Handle errors
+            print("Failed to grab frame")
             break
 
-        # * Process and detect landmarks
         image, results = mediapipe_detection(frame, holistic)
-        print(results)  # Print detection output
+        # print(results)  # Optionally print detection output for debugging
 
-        draw_styled_landmarks(image, results)  # Draw landmarks
-
-          # * 2. Prediction Logic
+        draw_styled_landmarks(image, results)
         keypoints = extract_keypoints(results)
         sequence.insert(0, keypoints)
         sequence = sequence[:30]
 
         if len(sequence) == 30:
-           res = model.predict(np.expand_dims(sequence, axis=0))[0]  # Predict the action
-           print(actions[np.argmax(res)])
+            res = model.predict(np.expand_dims(sequence, axis=0))[0]  # Fix: [0] to get 1D array
+            confidence = np.max(res)
+            action = actions[np.argmax(res)]
+            print(f"Predicted: {action} ({confidence:.2f})")
 
-        # * 3. Visualization logic
-        if res[np.argmax(res)] > threshold:
-            if len(sentence) > 0:
-                # Append to sentence only if it's not the same as the previous action
-                if actions[np.argmax(res)] != sentence[-1]:
-                    sentence.append(actions[np.argmax(res)])
-            else:
-                sentence.append(actions[np.argmax(res)])
+            # Visualization logic
+            if confidence > threshold:
+                if len(sentence) > 0:
+                    if action != sentence[-1]:
+                        sentence.append(action)
+                else:
+                    sentence.append(action)
 
-        # Limit the sentence to the last 5 actions for readability
-        if len(sentence) > 5:
-            sentence = sentence[-5:]
+            if len(sentence) > 5:
+                sentence = sentence[-5:]
 
-        # Draw a rectangle to display the predicted actions
-        cv2.rectangle(image, (0, 0), (640, 40), (173, 216, 230), -1)  # Light blue rectangle 
-        cv2.putText(image, ' '.join(sentence), (3, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+            # Draw prediction
+            cv2.rectangle(image, (0, 0), (640, 40), (173, 216, 230), -1)
+            cv2.putText(image, ' '.join(sentence), (3, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
-        # * Show to screen
+        # Show to screen
         cv2.imshow('OpenCV Feed', image)
 
         # Break gracefully on 'q' key press
         if cv2.waitKey(10) & 0xFF == ord('q'):
             break
 
-# * Release resources
 cap.release()
 cv2.destroyAllWindows()
-
-pose = []
-for res in results.pose_landmarks.landmark:
-     test =np.array([res.x, res.y, res.z, res.visibility])
-     pose.append(test)
-
